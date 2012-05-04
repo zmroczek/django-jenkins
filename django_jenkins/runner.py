@@ -130,7 +130,9 @@ class XMLTestResult(TextTestResult):
         """
         Dumps test result to xml
         """
-        with open(os.path.join(output_dir, 'junit.xml'), 'w') as output:
+        self.buffer = False
+
+        with open(os.path.join(output_dir, 'junit.xml'), 'w') as output:            
             document = XMLGenerator(output, 'utf-8')
             document.startDocument()
             document.startElement('testsuites', AttributesImpl({}))
@@ -147,12 +149,16 @@ class XMLTestResult(TextTestResult):
                     }))
 
                     if test_info.result == TestInfo.RESULT.ERROR:
-                        document.startElement('error', AttributesImpl({}))
-                        document.characters(test_info.err)
+                        document.startElement('error', AttributesImpl({
+                            'message' : unicode(test_info.err[1])
+                        }))
+                        document.characters(self._exc_info_to_string(test_info.err, test_info.test_method))
                         document.endElement('error')
                     elif test_info.result == TestInfo.RESULT.FAILURE:
-                        document.startElement('failure', AttributesImpl({}))
-                        document.characters(test_info.err)
+                        document.startElement('failure', AttributesImpl({
+                            'message' : unicode(test_info.err[1])
+                        }))
+                        document.characters(self._exc_info_to_string(test_info.err, test_info.test_method))
                         document.endElement('failure')
                     elif test_info.result == TestInfo.RESULT.UNEXPECTED_SUCCESS:
                         document.startElement('error', AttributesImpl({
@@ -161,6 +167,7 @@ class XMLTestResult(TextTestResult):
                         document.endElement('error')
                     elif test_info.result == TestInfo.RESULT.SKIPPED:
                         document.startElement('skipped', AttributesImpl({}))
+                        document.characters(test_info.reason)
                         document.endElement('skipped')
 
                     if test_info.stdout:

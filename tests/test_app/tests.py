@@ -10,10 +10,10 @@ class SaintyChecks(TestCase):
                        ['somewhere@nowhere.com'])
         self.assertTrue(1, len(mail.outbox))
 
-    @skip
+    @skip("Check skiped test")
     def test_is_skipped(self):
         print "This test should be skipped"
 
     def test_failure(self):
-        raise "Ups, should be disabled"
+        raise Exception("Ups, should be disabled")
 
