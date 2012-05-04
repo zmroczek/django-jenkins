@@ -14,6 +14,6 @@ class SaintyChecks(TestCase):
     def test_is_skipped(self):
         print "This test should be skipped"
 
-    def test_failure(self):
-        raise Exception("Ups, should be disabled")
+    #def test_failure(self):
+    #    raise Exception("Ups, should be disabled")
 
