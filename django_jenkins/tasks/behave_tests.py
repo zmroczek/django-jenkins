@@ -41,8 +41,8 @@ def testCaseFactory(name):
             self.behave_config.server_url = 'http://localhost:8081'
 
             # disable these in case you want to add set_trace in the tests you're developing
-            self.behave_config.stdout_capture = False
-            self.behave_config.stderr_capture = False
+            self.behave_config.stdout_capture = True
+            self.behave_config.stderr_capture = True
 
         def runTest(self, result=None):
             # run behave on a single directory
