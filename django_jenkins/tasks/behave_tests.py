@@ -4,6 +4,8 @@ Build suite with behave tests
 import unittest
 import sys
 
+from optparse import make_option
+
 import behave
 from behave import configuration, runner
 from os.path import dirname, abspath, join, isdir
@@ -23,7 +25,7 @@ def get_features(app_module):
 
 def testCaseFactory(name):
     class DjangoBehaveTestCase(LiveServerTestCase):
-        def __init__(self, features_dir):
+        def __init__(self, features_dir, options):
             unittest.TestCase.__init__(self)
             self.features_dir = features_dir
             # sys.argv kludge
@@ -40,9 +42,8 @@ def testCaseFactory(name):
 
             self.behave_config.server_url = 'http://localhost:8081'
 
-            # disable these in case you want to add set_trace in the tests you're developing
-            self.behave_config.stdout_capture = True
-            self.behave_config.stderr_capture = True
+            self.behave_config.stdout_capture = options.get('behave_stdout_capture', False)
+            self.behave_config.stderr_capture = options.get('behave_stderr_capture', False)
 
         def runTest(self, result=None):
             # run behave on a single directory
@@ -83,13 +84,24 @@ def testCaseFactory(name):
 
     DjangoBehaveTestCase.__name__ = name
     return DjangoBehaveTestCase
-        
-def make_test_suite(features_dir, app_label):
-    return testCaseFactory(app_label)(features_dir=features_dir)
+
+def make_test_suite(features_dir, app_label, options):
+    return testCaseFactory(app_label)(features_dir=features_dir, options=options)
 
 class Task(BaseTask):
+    option_list = [
+        make_option('--behave-stdout-capture',
+                    action='store_true', dest='behave_stdout_capture',
+            help='Do not capture stdout'),
+        make_option('--behave-stderr-capture',
+                    action='store_true', dest='behave_stderr_capture',
+            help='Do not capture stderr'),
+
+    ]
+
     def __init__(self, test_labels, options):
         super(Task, self).__init__(test_labels, options)
+        self.options = options
         if not self.test_labels:
             if hasattr(settings, 'PROJECT_APPS') and not options['test_all']:
                 self.test_labels = [app_name.split('.')[-1]
@@ -107,5 +119,5 @@ class Task(BaseTask):
             features_dir = get_features(app)
             if features_dir is not None:
                 # build a test suite for this directory
-                features_test_suite = make_test_suite(features_dir, label)
+                features_test_suite = make_test_suite(features_dir, label, self.options)
                 suite.addTest(features_test_suite)
